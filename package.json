@@ -5,10 +5,9 @@
   "scripts": {
     "db:check": "tsx scripts/db-check.ts",
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate",
     "lint": "next lint"
   },
   "dependencies": {
