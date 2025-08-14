@@ -1,0 +1,94 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String         @default("")        // safe default
+  role         String         @default("Student") // safe default
+  subject      String?
+  bio          String?
+  createdAt    DateTime       @default(now())
+  sessions     Session[]
+  documents    Document[]
+  chatSessions ChatSession[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Document {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  title       String
+  fileUrl     String
+  pageCount   Int
+  createdAt   DateTime      @default(now())
+  pages       PageText[]
+  sessions    ChatSession[]
+  annotations Annotation[]
+}
+
+model PageText {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id])
+  pageNumber  Int
+  text        String
+  tokensJson  Json?
+  @@unique([documentId, pageNumber])
+}
+
+model ChatSession {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  documentId  String
+  document    Document   @relation(fields: [documentId], references: [id])
+  title       String
+  createdAt   DateTime   @default(now())
+  messages    Message[]
+  lastPage    Int?
+}
+
+model Message {
+  id            String      @id @default(cuid())
+  chatSessionId String
+  session       ChatSession @relation(fields: [chatSessionId], references: [id])
+  role          String      // "user" | "assistant" | "tool"
+  content       String
+  toolName      String?
+  createdAt     DateTime    @default(now())
+  pageNumber    Int?
+  quote         String?
+}
+
+model Annotation {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id])
+  chatId       String?
+  pageNumber   Int
+  type         String   // "highlight" | "circle" | "box"
+  x            Float
+  y            Float
+  width        Float
+  height       Float
+  color        String?
+  note         String?
+  createdAt    DateTime @default(now())
+}
